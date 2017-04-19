@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys
+import os
 import math
 import boto
 import argparse
@@ -24,9 +24,9 @@ def parse_arguments():
     args.multipart_threshold = args.multipart_threshold * 1024 *1024
     return args
 
-def multipart_upload_to_be_used(file_path):
+def multipart_upload_to_be_used(file_path, multipart_threshold):
     file_size = os.stat(file_path).st_size
-    return file_size > args.multipart_threshold
+    return file_size > multipart_threshold
 
 def need_to_update(s3_connection, bucket_name, file_path, s3_path):
     bucket = s3_connection.get_bucket(bucket_name)
@@ -80,17 +80,18 @@ def multipart_upload(s3, bucketname, file_path, s3_path, chunk_size):
         multipart_upload_request.cancel_upload()
         print "Upload failed"
 
-def upload(s3_connection, bucketname, file_path, s3_path, mode):
-    if multipart_upload_to_be_used(file_path) and mode != 'simple-upload':
-        multipart_upload(s3_connection, bucketname, file_path, s3_path)
+def upload(s3_connection, bucketname, file_path, s3_path, mode, chunk_size, multipart_threshold):
+    if multipart_upload_to_be_used(file_path, multipart_threshold) and mode != 'simple-upload':
+        multipart_upload(s3_connection, bucketname, file_path, s3_path, chunk_size)
     else:
         simple_upload(s3_connection, bucketname, file_path, s3_path)
 
 def sync_to_s3():
     args = parse_arguments()
     s3_connection = boto.connect_s3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-    if args.mode != 'sync' or need_to_update(s3_connection, args.bucket, args.file_path, args.key):
-        upload(s3_connection, args.bucket, args.file_path, args.key, args.mode)
+    upload_needed = need_to_update(s3_connection, args.bucket, args.file_path, args.key)
+    if args.mode != 'sync' or upload_needed:
+        upload(s3_connection, args.bucket, args.file_path, args.key, args.mode, args.chunk_size, args.multipart_threshold)
     else:
         print "Nothing to update"
 
