@@ -15,11 +15,11 @@ def log(msg):
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-b", "--bucket", type=str, required=True, help="Selects the S3 bucket to upload data to")
-    parser.add_argument("-f", "--file_path", type=str, required=True, help="Path of the file to be uploaded")
-    parser.add_argument("-k", "--key", type=str, default=None, help="Key of the object. Same as file_path is undefined")
-    parser.add_argument("-m","--mode", default='auto', choices=['auto', 'sync', 'simple-upload'],help="Method of upload")
-    parser.add_argument("--chunk_size", default=5, type=int, help="Size of chunk in multi-part upload in MB")
+    parser.add_argument("-b", "--bucket", type=str, required=True, help="Upload: Selects the S3 bucket to upload data to. Download: Selects the S3 bucket to download data from")
+    parser.add_argument("-f", "--file_path", type=str, required=True, help="Upload: Path of the file to be uploaded. Download: Path to download file to")
+    parser.add_argument("-k", "--key", type=str, default=None, help="Key of the object. Same as file_path is undefined for upload")
+    parser.add_argument("-m","--mode", default='auto', choices=['auto', 'sync', 'single-part-upload'],help="Mode of upload/download")
+    parser.add_argument("--chunk_size", default=5, type=int, help="Size of chunk in multipart upload in MB")
     parser.add_argument("--multipart_threshold", default=10, type=int, help="Minimum size in MB to upload using multipart")
     args = parser.parse_args()
 
@@ -94,7 +94,7 @@ def multipart_upload(s3, bucketname, file_path, s3_path, chunk_size):
         log("Upload failed")
 
 def upload(s3_connection, bucketname, file_path, s3_path, mode, chunk_size, multipart_threshold):
-    if multipart_upload_to_be_used(file_path, multipart_threshold) and mode != 'simple-upload':
+    if multipart_upload_to_be_used(file_path, multipart_threshold) and mode != 'single-part-upload':
         log("payload_mode=multi_part")
         multipart_upload(s3_connection, bucketname, file_path, s3_path, chunk_size)
     else:

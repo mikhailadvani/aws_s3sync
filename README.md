@@ -13,24 +13,27 @@ Setup the following environment variables
 **AWS_ACCESS_KEY_ID**
 **AWS_SECRET_ACCESS_KEY**
 
-#### Command
+#### Commands
 
 `sync_to_s3`
+`sync_from_s3`
 
 #### Arguments
 
 ```
-optional arguments:
   -h, --help            show this help message and exit
   -b BUCKET, --bucket BUCKET
-                        Name of the S3 bucket to upload data to
+                        Upload: Selects the S3 bucket to upload data to.
+                        Download: Selects the S3 bucket to download data from
   -f FILE_PATH, --file_path FILE_PATH
-                        Path of the file to be uploaded
-  -k KEY, --key KEY     Key of the object. Same as file_path if undefined
-  -m {auto,sync,simple-upload}, --mode {auto,sync,simple-upload}
-                        Method of upload
+                        Upload: Path of the file to be uploaded. Download:
+                        Path to download file to
+  -k KEY, --key KEY     Key of the object. Same as file_path is undefined for
+                        upload
+  -m {auto,sync,single-part-upload}, --mode {auto,sync,single-part-upload}
+                        Mode of upload/download
   --chunk_size CHUNK_SIZE
-                        Size of chunk in multi-part upload in MB
+                        Size of chunk in multipart upload in MB
   --multipart_threshold MULTIPART_THRESHOLD
                         Minimum size in MB to upload using multipart
 ```
@@ -39,6 +42,6 @@ optional arguments:
 
 * `auto` : Single-part upload or multi-part upload will be chosen based on the file being smaller/larger than `multipart_threshold`
 * `sync` : Upload file to S3 only if the local file has changed. Checked based on ETag/MD5
-* `simple-upload` : Force single-part upload. Applicable only for files of size larger than `multipart_threshold`
+* `single-part-upload` : Force single-part upload. Applicable only for files of size larger than `multipart_threshold`
 
 
