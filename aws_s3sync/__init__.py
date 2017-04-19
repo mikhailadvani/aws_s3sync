@@ -47,17 +47,17 @@ def simple_upload(s3_connection, bucket_name, file_path, s3_path):
         print "Upload failed"
         print e.message
 
-def multipart_upload(s3, bucketname, file_path, s3_path):
+def multipart_upload(s3, bucketname, file_path, s3_path, chunk_size):
     bucket = s3.get_bucket(bucketname)
     multipart_upload_request = bucket.initiate_multipart_upload(s3_path)
 
     file_size = os.stat(file_path).st_size
-    chunks_count = int(math.ceil(file_size / float(args.chunk_size)))
+    chunks_count = int(math.ceil(file_size / float(chunk_size)))
 
     for i in range(chunks_count):
-        offset = i * args.chunk_size
+        offset = i * chunk_size
         remaining_bytes = file_size - offset
-        payload_bytes = min([args.chunk_size, remaining_bytes])
+        payload_bytes = min([chunk_size, remaining_bytes])
         part_num = i + 1
 
         print "Uploading %d/%d" % (part_num, chunks_count)
@@ -80,8 +80,8 @@ def multipart_upload(s3, bucketname, file_path, s3_path):
         multipart_upload_request.cancel_upload()
         print "Upload failed"
 
-def upload(s3_connection, bucketname, file_path, s3_path):
-    if multipart_upload_to_be_used(args.file_path) and args.mode != 'simple-upload':
+def upload(s3_connection, bucketname, file_path, s3_path, mode):
+    if multipart_upload_to_be_used(file_path) and mode != 'simple-upload':
         multipart_upload(s3_connection, bucketname, file_path, s3_path)
     else:
         simple_upload(s3_connection, bucketname, file_path, s3_path)
@@ -90,7 +90,7 @@ def sync_to_s3():
     args = parse_arguments()
     s3_connection = boto.connect_s3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
     if args.mode != 'sync' or need_to_update(s3_connection, args.bucket, args.file_path, args.key):
-        upload(s3_connection, args.bucket, args.file_path, args.key)
+        upload(s3_connection, args.bucket, args.file_path, args.key, args.mode)
     else:
         print "Nothing to update"
 
