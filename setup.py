@@ -7,10 +7,13 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+with open(path.join(here, 'version.txt'), encoding='utf-8') as f:
+    version = f.read()
+
 setup(
     name='aws_s3sync',
 
-    version='1.0.0.dev1',
+    version=version,
 
     description='A utility to sync data to/from AWS S3',
     long_description=long_description,
