@@ -1,0 +1,4 @@
+.idea
+dist
+build
+aws_s3sync.egg-info
