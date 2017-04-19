@@ -42,12 +42,14 @@ def need_to_update(s3_connection, bucket_name, file_path, s3_path):
     else:
         local_md5 = hashlib.md5(open(file_path, "rb").read()).hexdigest()
         log("local_signature=%s" % local_md5)
-        log("remote_signature=%s" % key.etag.strip('"'))
-        return local_md5 != key.etag.strip('"')
+        remote_md5 = key.get_metadata('md5')
+        log("remote_signature=%s" % remote_md5)
+        return local_md5 != remote_md5
 
 def simple_upload(s3_connection, bucket_name, file_path, s3_path):
     bucket = s3_connection.get_bucket(bucket_name)
     key = boto.s3.key.Key(bucket, s3_path)
+    key.set_metadata('md5', hashlib.md5(open(file_path, "rb").read()).hexdigest())
     try:
         key.set_contents_from_filename(file_path)
         log("Upload completed successfully")
@@ -57,8 +59,7 @@ def simple_upload(s3_connection, bucket_name, file_path, s3_path):
 
 def multipart_upload(s3, bucketname, file_path, s3_path, chunk_size):
     bucket = s3.get_bucket(bucketname)
-    multipart_upload_request = bucket.initiate_multipart_upload(s3_path)
-
+    multipart_upload_request = bucket.initiate_multipart_upload(s3_path, metadata={'md5': hashlib.md5(open(file_path, "rb").read()).hexdigest()})
     file_size = os.stat(file_path).st_size
     chunks_count = int(math.ceil(file_size / float(chunk_size)))
 
@@ -78,7 +79,6 @@ def multipart_upload(s3, bucketname, file_path, s3_path, chunk_size):
                 multipart_upload_request.cancel_upload()
                 log("Upload failed")
                 log(e.message)
-
 
     if len(multipart_upload_request.get_all_parts()) == chunks_count:
         multipart_upload_request.complete_upload()
