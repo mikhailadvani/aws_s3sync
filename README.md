@@ -10,12 +10,13 @@
 
 Setup the following environment variables
 
-**AWS_ACCESS_KEY_ID**
-**AWS_SECRET_ACCESS_KEY**
+* **AWS_ACCESS_KEY_ID**
+* **AWS_SECRET_ACCESS_KEY**
 
 #### Commands
 
 `sync_to_s3`
+
 `sync_from_s3`
 
 #### Arguments
@@ -40,8 +41,8 @@ Setup the following environment variables
 
 ##### Mode
 
-* `auto` : Single-part upload or multi-part upload will be chosen based on the file being smaller/larger than `multipart_threshold`
-* `sync` : Upload file to S3 only if the local file has changed. Checked based on ETag/MD5
+* `auto` : Upload: Single-part upload or multi-part upload will be chosen based on the file being smaller/larger than `multipart_threshold`
+* `sync` : Upload/downloand file to/from S3 only if the local/remote file have different signatures. Checked based on ETag/MD5
 * `single-part-upload` : Force single-part upload. Applicable only for files of size larger than `multipart_threshold`
 
 
