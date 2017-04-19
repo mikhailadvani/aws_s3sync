@@ -46,6 +46,12 @@ def need_to_update(s3_connection, bucket_name, file_path, s3_path):
         log("remote_signature=%s" % remote_md5)
         return local_md5 != remote_md5
 
+def need_to_fetch(s3_connection, bucket_name, file_path, s3_path):
+    if not os.path.isfile(file_path):
+        return True
+    else:
+        return need_to_update(s3_connection, bucket_name, file_path, s3_path)
+
 def simple_upload(s3_connection, bucket_name, file_path, s3_path):
     bucket = s3_connection.get_bucket(bucket_name)
     key = boto.s3.key.Key(bucket, s3_path)
@@ -95,6 +101,16 @@ def upload(s3_connection, bucketname, file_path, s3_path, mode, chunk_size, mult
         log("payload_mode=single_part")
         simple_upload(s3_connection, bucketname, file_path, s3_path)
 
+def download(s3_connection, bucketname, file_path, s3_path):
+    bucket = s3_connection.get_bucket(bucketname)
+    key = boto.s3.key.Key(bucket, s3_path)
+    try:
+        key.get_contents_to_filename(file_path)
+        log("Download completed successfully")
+    except Exception as e:
+        log("Download failed")
+        log(e.message)
+
 def sync_to_s3():
     args = parse_arguments()
     s3_connection = boto.connect_s3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
@@ -107,4 +123,14 @@ def sync_to_s3():
     else:
         log("Nothing to update")
 
-
+def sync_from_s3():
+    args = parse_arguments()
+    s3_connection = boto.connect_s3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+    log("s3_connection=established")
+    download_needed = need_to_fetch(s3_connection, args.bucket, args.file_path, args.key)
+    log("download_mode=%s" % args.mode)
+    log("download_needed=%s" % download_needed)
+    if args.mode != 'sync' or download_needed:
+        download(s3_connection, args.bucket, args.file_path, args.key)
+    else:
+        log("Nothing to update")
